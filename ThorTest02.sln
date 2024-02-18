@@ -12,12 +12,15 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImgTest01", "ImgTest01\ImgT
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImgWin", "ImgWin\ImgWin.vcxproj", "{B73ECAFB-73E2-46FE-8014-5C5C7CC45AA7}"
 	ProjectSection(ProjectDependencies) = postProject
-		{7171F853-BF52-48C2-9978-D601621C25B8} = {7171F853-BF52-48C2-9978-D601621C25B8}
+		{2776F1BF-EEC1-4F72-8900-5CFD398C0AA9} = {2776F1BF-EEC1-4F72-8900-5CFD398C0AA9}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImgPoolLib", "ImgPoolLib\ImgPoolLib.vcxproj", "{2776F1BF-EEC1-4F72-8900-5CFD398C0AA9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImgPoolTest", "ImgPoolTest\ImgPoolTest.vcxproj", "{5EDA384B-2CC9-4A7D-B125-B9138CC4F8A8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2776F1BF-EEC1-4F72-8900-5CFD398C0AA9} = {2776F1BF-EEC1-4F72-8900-5CFD398C0AA9}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

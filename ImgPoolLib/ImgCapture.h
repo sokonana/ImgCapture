@@ -17,6 +17,9 @@ public:
     int init();
     int shoot(int frame);
     int close();
+    int SetGain(double);
 
     unsigned short* get_img();
+    int get_width();
+    int get_height();
 };

@@ -131,9 +131,6 @@
     <ClCompile Include="..\..\..\..\Downloads\Scientific Camera Interfaces\SDK\Native Toolkit\load_dll_helpers\tl_camera_sdk_load.c" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\ImgPoolTest\ImgCapture.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

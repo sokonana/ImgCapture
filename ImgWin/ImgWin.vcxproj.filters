@@ -27,9 +27,15 @@
     <ClInclude Include="ImgWin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ImgProcessHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImgWin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImgProcessHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

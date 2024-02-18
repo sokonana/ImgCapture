@@ -64,6 +64,7 @@ int ImgCapture::initialize_camera_resources()
 
     cout.setf(ios::hex, ios::basefield);
     cout << "Camera handle = " << camera_handle << endl;
+    cout.setf(ios::dec, ios::basefield);
 
     return 0;
 }
@@ -112,6 +113,17 @@ int ImgCapture::report_error_and_cleanup_resources(const char* error_string)
     return num_errors;
 }
 
+int ImgCapture::SetGain(double NewGain)
+{
+    //const double gain_dB = 30.0;
+    int gain_index;
+    if (tl_camera_convert_decibels_to_gain(camera_handle, NewGain, &gain_index))
+        return report_error_and_cleanup_resources(tl_camera_get_last_error());
+
+    tl_camera_set_gain(camera_handle, gain_index);
+
+    return 0;
+}
 
 int ImgCapture::init()
 {
@@ -132,7 +144,7 @@ int ImgCapture::init()
     if (gain_max > 0)
     {
         // this camera supports gain, set it to 6.0 decibels
-        const double gain_dB = 6.0;
+        const double gain_dB = 30.0;
         int gain_index;
         if (tl_camera_convert_decibels_to_gain(camera_handle, gain_dB, &gain_index))
             return report_error_and_cleanup_resources(tl_camera_get_last_error());
@@ -195,14 +207,24 @@ int ImgCapture::shoot(int frame)
         if (!image_buffer)
             continue; //timeout
 
-        printf("Pointer to image: 0x%p\n", image_buffer);
-        printf("Frame count: %d\n", frame_count);
-        printf("Pointer to metadata: 0x%p\n", metadata);
-        printf("Metadata size in bytes: %d\n", metadata_size_in_bytes);
+        //printf("Pointer to image: 0x%p\n", image_buffer);
+        //printf("Frame count: %d\n", frame_count);
+        //printf("Pointer to metadata: 0x%p\n", metadata);
+        //printf("Metadata size in bytes: %d\n", metadata_size_in_bytes);
 
         count++;
     }
 
     printf("Images received! Closing camera...\n");
     return 0;
+}
+
+int ImgCapture::get_width()
+{
+    return image_width;
+}
+
+int ImgCapture::get_height()
+{
+    return image_height;
 }
