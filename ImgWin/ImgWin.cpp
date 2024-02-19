@@ -1,11 +1,12 @@
 // ImgWin.cpp : Defines the entry point for the application.
-//
+// Win32 application to pool image acquisition from Thorlabs sensor and display
 
 #include "framework.h"
 #include "ImgWin.h"
 #include "ImgCapture.h"
 #include "ImgProcessHelper.h"
 #include <Commctrl.h>
+#include <commdlg.h>
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
@@ -16,6 +17,7 @@ using namespace Gdiplus;
 #pragma comment (lib,"Gdiplus.lib")
 
 #define MAX_LOADSTRING 100
+#define MAXBUFF 1000
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -28,8 +30,8 @@ bool displayflag = false;
 int GainValue = 30;
 bool Lock_Image = false;
 
-cv::Mat image;
-cv::Mat image3c;
+cv::Mat image; // for holding single channel - grayscale
+cv::Mat image3c; // for holding RBG channels - for compatibility with Bitmap in Win32
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -38,7 +40,7 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK Gain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 VOID OnPaint(HDC hdc);
-void SaveImage(std::string FileName);
+void SaveImage(std::string FileName, HWND hWnd);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -48,6 +50,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
+    // Graphics handling using Win32 GDI+ library
     GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR           gdiplusToken;
 
@@ -55,7 +58,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Initialize GDI+.
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
-    // TODO: Place code here.
+    // Instantiate class library for calling Thorlabs API
     ImgObj = new ImgCapture();
 
     // Initialize global strings
@@ -165,7 +168,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         img_rows = ImgObj->get_height();
         img_cols = ImgObj->get_width();
 
-        ImgObj->SetGain(40);
+        // Set initial gain value
+        ImgObj->SetGain(25);
 
         // Start the timer
         SetTimer(hWnd, IDT_TIMER, 40, NULL);
@@ -183,7 +187,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case IDM_SAVE:
                 Lock_Image = true;
-                SaveImage("OutImg.png");
+                SaveImage("OutImg.png", hWnd);
                 Lock_Image = false;
                 break;
             case IDM_GAIN:
@@ -260,18 +264,51 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-void SaveImage(std::string FileName)
+// Method to save captured image in grayscale PNG file format
+void SaveImage(std::string FileName, HWND hWnd)
 {
     ImgProcessHelper ImgProcessObj;
+    char* filename = new char[MAXBUFF];
+    ZeroMemory(filename, MAXBUFF);
 
-    cv::Mat Tgt;
-    // Flip the image vertically
-    cv::flip(image3c, Tgt, 0);
+    // Display file save as dialog box
+    OPENFILENAMEA DlgOptions;
+    ZeroMemory(&DlgOptions, sizeof(DlgOptions));
 
-    ImgProcessObj.SaveImg(FileName, Tgt);
+    DlgOptions.lStructSize = sizeof(DlgOptions);
+    DlgOptions.hwndOwner = hWnd;
+    DlgOptions.hInstance = NULL;
+    DlgOptions.lpstrFilter = "PNG Image\0.png\0JPG Image\0.jpg\0\0";
+    DlgOptions.lpstrCustomFilter = NULL;
+    DlgOptions.nMaxCustFilter = 0;
+    DlgOptions.nFilterIndex = 1;
+    DlgOptions.lpstrFile = filename;
+    DlgOptions.nMaxFile = MAXBUFF;
+    DlgOptions.lpstrFileTitle = NULL;
+    DlgOptions.lpstrInitialDir = NULL;
+    DlgOptions.lpstrTitle = "Saving Image File";
+    DlgOptions.Flags = OFN_OVERWRITEPROMPT | OFN_ENABLESIZING;
+    DlgOptions.nFileOffset = 0;
+    DlgOptions.nFileExtension = 0;
+    DlgOptions.lpstrDefExt = "png";
+
+
+    if (GetSaveFileNameA(&DlgOptions))
+    {
+        ImgProcessObj.SaveImg(filename, image);
+
+        std::string msg = "Successfully saved image as ";
+        msg.append(filename);
+
+        MessageBoxA(hWnd, msg.c_str(), "Success", MB_OK);
+    }
+
+    delete filename;
+
     
 }
 
+// Callback function for gain adjustment using a slider
 INT_PTR CALLBACK Gain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND hTrackBar = GetDlgItem(hDlg, IDC_SLIDER1);
@@ -282,7 +319,7 @@ INT_PTR CALLBACK Gain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_INITDIALOG:
         SendMessage(hTrackBar, TBM_SETRANGEMIN, FALSE, 0);
         SendMessage(hTrackBar, TBM_SETRANGEMAX, FALSE, 100);
-        SendMessage(hTrackBar, TBM_SETPOS, TRUE, GainValue);
+        SendMessage(hTrackBar, TBM_SETPOS, TRUE, GainValue);  // Set the slider position to show current position
         SendMessage(hTrackBar, TBM_SETTICFREQ, 5, 0);
         return (INT_PTR)TRUE;
     case WM_HSCROLL:
@@ -334,6 +371,8 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 /////////////////////////////////////
 // Painting routines for the window
+// This function transfer the captured image to bitmap
+// and draw on the screen device context on each windows refresh
 VOID OnPaint(HDC hdc)
 {
     Graphics graphics(hdc);
